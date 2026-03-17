@@ -4,58 +4,52 @@ Designed an AI-powered Meeting Action Tracker using Java, Spring Boot, and Sprin
 Built a scalable event-driven pipeline using Apache Kafka for asynchronous transcript ingestion and AI analysis, enabling distributed processing of 10k+ meeting records with fault-tolerant, high-throughput message handling.
 Developed a real-time insights dashboard using React.
 
-## How It Works: Flow Diagram
-
-This diagram explains exactly what happens under the hood when a user uploads a transcript.
+## Architecture Block Diagram
 
 ```mermaid
-graph TD
-    %% Define Styles
-    classDef user fill:#f9f9f9,stroke:#333,stroke-width:2px
-    classDef react fill:#61dafb,stroke:#333,stroke-width:2px,color:#000
-    classDef spring fill:#6db33f,stroke:#333,stroke-width:2px,color:#fff
-    classDef kafka fill:#ffffff,stroke:#e96f10,stroke-width:3px,stroke-dasharray: 5 5,color:#000
-    classDef ai fill:#10a37f,stroke:#333,stroke-width:2px,color:#fff
-    classDef db fill:#336791,stroke:#333,stroke-width:2px,color:#fff
+flowchart LR
+    classDef client fill:#3b82f6,color:#fff,stroke:#1d4ed8,stroke-width:2px;
+    classDef api fill:#10b981,color:#fff,stroke:#047857,stroke-width:2px;
+    classDef worker fill:#8b5cf6,color:#fff,stroke:#6d28d9,stroke-width:2px;
+    classDef broker fill:#f59e0b,color:#fff,stroke:#b45309,stroke-width:2px;
+    classDef ai fill:#ef4444,color:#fff,stroke:#b91c1c,stroke-width:2px;
+    classDef db fill:#64748b,color:#fff,stroke:#334155,stroke-width:2px;
 
-    User((User)):::user
-    
-    subgraph Step 1: The User Interface
-        UI["React Dashboard<br/><br/><i>Shows the upload form<br/>and displays the final meeting summaries.</i>"]:::react
-    end
-    
-    subgraph Step 2: The Fast Ingestion API
-        Controller["Spring Boot REST API<br/><br/><i>Receives transcript & immediately<br/>returns '202 Accepted' so the UI<br/>doesn't freeze while waiting.</i>"]:::spring
-    end
-    
-    subgraph Step 3: The Event-Driven Buffer
-        Kafka[["Apache Kafka Queue<br/>(Topic: meeting-transcripts)<br/><br/><i>Safely holds massive amounts of<br/>transcripts even under heavy load<br/>until the AI is ready for them.</i>"]]:::kafka
-    end
-    
-    subgraph Step 4: The Background Worker
-        Worker["Spring AI Listener<br/><br/><i>Pulls 1 transcript at a time.<br/>Builds an intelligent prompt asking<br/>to extract Action Items & Decisions.</i>"]:::spring
-    end
-    
-    subgraph Step 5: The Brains
-        LLM{{"OpenAI LLM<br/><br/><i>Reads the transcript taking 10-20 seconds<br/>& returns strictly formatted JSON.</i>"}}:::ai
-    end
-    
-    subgraph Step 6: The Persistent Storage
-        DB[("Database (H2 / Postgres)<br/><br/><i>Stores the clean, processed<br/>Action Items, Decisions, and Task Owners.</i>")]:::db
+    subgraph Frontend Tier
+        UI["React Dashboard Focuses on UI/UX"]:::client
     end
 
-    %% Flow
-    User -->|1. Pastes text & clicks Submit| UI
-    UI -->|2. POST /api/analyze| Controller
-    Controller -->|3. Drops text into Queue| Kafka
+    subgraph Spring Boot Application Tier
+        direction TB
+        API["API Gateway (Fast Ingestion)"]:::api
+        Worker["Background AI Worker (Heavy Process)"]:::worker
+    end
+
+    subgraph Message Broker Tier
+        Kafka[("Apache Kafka (Event Queue)")]:::broker
+    end
+
+    subgraph Storage Tier
+        DB[("Relational Database")]:::db
+    end
+
+    subgraph AI Processing
+        LLM{"OpenAI/LLM Model"}:::ai
+    end
+
+    %% Flow of data
+    UI -- "1. POST Transcript" --> API
+    API -- "2. Publish Event" --> Kafka
+    API -. "3. HTTP 202 Accepted" .-> UI
     
-    Kafka -->|4. Consumes text at its own pace| Worker
-    Worker -->|5. Sends Prompt + Transcript| LLM
-    LLM -->|6. Returns JSON Results| Worker
-    Worker -->|7. Saves clean, structured data| DB
+    Kafka -- "4. Consume Event" --> Worker
+    Worker -- "5. Send Prompt & Text" --> LLM
+    LLM -- "6. Return JSON Insights" --> Worker
     
-    UI -.->|8. GET /api/meetings (Polling)| Controller
-    Controller -.->|9. Fetches Completed Data| DB
+    Worker -- "7. Save Structured Data" --> DB
+    
+    UI -- "8. GET Results (Polling)" --> API
+    API -- "9. Fetch Completed Data" --> DB
 ```
 
 
