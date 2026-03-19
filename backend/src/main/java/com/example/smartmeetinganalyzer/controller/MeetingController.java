@@ -1,5 +1,5 @@
 package com.example.smartmeetinganalyzer.controller;
-
+import com.example.smartmeetinganalyzer.service.KafkaProducerService;
 import com.example.smartmeetinganalyzer.entity.Meeting;
 import com.example.smartmeetinganalyzer.repository.MeetingRepository;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +14,12 @@ import java.util.UUID;
 public class MeetingController {
 
     private final MeetingRepository meetingRepository;
+    private final KafkaProducerService kafkaProducerService;
 
-    // This is "Constructor Injection" - how we plug the Repository into the Controller!
-    public MeetingController(MeetingRepository meetingRepository) {
+    // This is "Constructor Injection" - how we plug the Repository AND Service!
+    public MeetingController(MeetingRepository meetingRepository, KafkaProducerService kafkaProducerService) {
         this.meetingRepository = meetingRepository;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     // 1. POST: Create a new meeting (Upload Transcript)
@@ -26,7 +28,8 @@ public class MeetingController {
         meeting.setStatus("PENDING");
         Meeting savedMeeting = meetingRepository.save(meeting);
         
-        // TODO: In the next step, we will also send this to KAFKA here!
+        // --- PHASE 2 COMPLETE: Now we send the ID to KAFKA! ---
+        kafkaProducerService.sendMeetingId(savedMeeting.getId().toString());
         
         return ResponseEntity.ok(savedMeeting);
     }
