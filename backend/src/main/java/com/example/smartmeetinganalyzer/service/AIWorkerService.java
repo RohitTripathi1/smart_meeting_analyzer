@@ -56,6 +56,7 @@ public class AIWorkerService {
                     
                 } catch (Exception e) {
                     System.err.println("--- ⚠️ CONSUMER: AI Processing failed (OpenAI Quota Exceeded or Error). ---");
+                    System.err.println("--- 🔴 ERROR DETAILS: " + e.getMessage() + " ---");
                     System.err.println("--- 🔄 CONSUMER: Falling back to Mock AI Summary so you can finish the project! ---");
                     
                     // Artificial delay to simulate AI thinking

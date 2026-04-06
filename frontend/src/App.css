@@ -161,6 +161,12 @@
   border: 1px solid #4ade80;
 }
 
+.status-crashed {
+  background: linear-gradient(135deg, #fecaca, #fca5a5);
+  color: #991b1b;
+  border: 1px solid #f87171;
+}
+
 /* --- AI SUMMARY BOX --- */
 .summary-box {
   background: rgba(255, 255, 255, 0.8);
